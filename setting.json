@@ -1,0 +1,10 @@
+{
+  "targetDir": {
+    "pages": "pages",
+    "layout": "layout",
+    "output": "dist"
+  },
+  "var": {
+    "blogName": "しょぼログ"
+  }
+}

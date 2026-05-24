@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{{blogName}}</title>
+  <link rel="stylesheet" href="/src/default.css">
+  <style>
+    #welcome {
+      font-size: 40px;
+      font-weight: 900;
+    }
+
+    .rainbow {
+      background-image: repeating-linear-gradient(to bottom right,
+          hsl(0deg, 80%, 50%),
+          hsl(60deg, 80%, 50%),
+          hsl(120deg, 80%, 50%),
+          hsl(180deg, 80%, 50%),
+          hsl(240deg, 80%, 50%),
+          hsl(300deg, 80%, 50%),
+          hsl(360deg, 80%, 50%) 50%);
+      background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-size: 1000% 1000%;
+      background-position: 0% 0%;
+      animation: rainbow-slide 50s infinite;
+    }
+
+    @keyframes rainbow-slide {
+      from {
+        background-position: 0% 0%;
+      }
+      to {
+        background-position: 500% 500%;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <header class="center">
+    <div><a href="/">{{blogName}}</a></div>
+  </header>
+  <main>
+    <div class="center rainbow" id="welcome">
+      <div>よ　う　こ　そ</div>
+      <div>W　E　L　C　O　M　E</div>
+    </div>
+    <div class="wide-margin"></div>
+    <div class="center">
+      ここは、hoimohuとShoboiNamaeのサイトです。いらっしゃい。
+    </div>
+    <div>
+      {{content}}
+    </div>
+  </main>
+  <footer class="center">
+    <div><a href="/about">このサイトについて</a></div>
+    <div>(c) 2026 hoimohu</div>
+  </footer>
+</body>
+
+</html>

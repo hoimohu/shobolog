@@ -1,0 +1,22 @@
+{
+  "name": "shobolog-engine",
+  "version": "1.0.0",
+  "description": "A HTML and Markdown based blog engine",
+  "main": "main.js",
+  "type": "module",
+  "scripts": {
+    "build": "node main.js"
+  },
+  "keywords": [
+    "html",
+    "markdown",
+    "blog"
+  ],
+  "author": "hoimohu",
+  "license": "MIT",
+  "dependencies": {
+    "@syuilo/aiscript": "^1.2.1",
+    "katex": "^0.16.47",
+    "shiki": "^4.1.0"
+  }
+}
