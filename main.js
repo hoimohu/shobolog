@@ -1,7 +1,9 @@
-import { promises as fs } from "fs";
-import path from "path";
+import { promises as fs } from "node:fs";
+import path from "node:path";
 import * as ais from "@syuilo/aiscript";
 import mdread from "./mdr-custom.mjs";
+
+console.log(new Date().toLocaleString());
 
 const currentDir = process.cwd();
 
@@ -22,13 +24,15 @@ async function getAllFiles(dir, converter) {
     const fullPath = path.join(dir, entry.name);
     if (entry.isFile()) {
       const fileContent = await fs.readFile(fullPath, "utf-8");
-      dirObj.files[entry.name] = await converter(fileContent, entry.name);
+      dirObj.files[entry.name] = await converter(fileContent, fullPath);
     } else if (entry.isDirectory()) {
       dirObj.dirs.push(await getAllFiles(fullPath, converter));
     }
   }
   return dirObj;
 }
+
+const layout = await getAllFiles(layoutDir, async (content) => content.replace(/\n|\r\n|\r/g, '\n'));
 
 async function replaceVars(content, vars) {
   return content.replace(/\{\{(\w+)\}\}/g, (match, varName) => {
@@ -96,13 +100,42 @@ async function writeOutput(dir, basePath = "") {
   }
 }
 
+async function prerender(dir, basePath = "") {
+  const dirObj = {
+    name: path.basename(basePath),
+    dirs: [],
+    files: {}
+  };
+  for (const fileName in dir.files) {
+    const file = dir.files[fileName];
+    const vars = { ...setting.var, ...file.vars };
+    if (file.type === 'md') {
+      // md
+      vars.content = await mdread(await replaceVars(file.source, vars), aiscriptHandler);
+      const layoutPath = (vars.layout || "default") + '.html';
+      dirObj.files[fileName] = await replaceVars(getLayout(layoutPath, layout), vars);
+    } else if (file.type === 'html') {
+      // html
+      dirObj.files[fileName] = await replaceVars(file.source, vars);
+    }
+  }
+  for (const subDir of dir.dirs) {
+    dirObj.dirs.push(await prerender(subDir, path.join(basePath, subDir.name)));
+  }
+  return dirObj;
+}
+
 async function main() {
-  const layout = await getAllFiles(layoutDir, async (content) => content.replace(/\n|\r\n|\r/g, '\n'));
-  const pages = await getAllFiles(pagesDir, async (content, name) => {
-    if (name.endsWith(".md")) {
+  const pageList = [];
+
+  const pages = await getAllFiles(pagesDir, async (content, fullPath) => {
+    if (fullPath.endsWith(".md")) {
       const metadata = {
         tags: [],
-        content: ""
+        content: "",
+        date: 0,
+        lastUpdate: 0,
+        path: '/' + path.relative(pagesDir, fullPath).replace(/\\/g, '/').replace(/\.md$/, '.html').replace(/index\.html$/, '')
       };
       let start = false;
       let mainContent = content.replace(/\n|\r\n|\r/g, '\n');
@@ -133,24 +166,33 @@ async function main() {
         }
       }
 
+      if (metadata.lastUpdate === 0 && metadata.date !== 0) {
+        metadata.lastUpdate = metadata.date;
+      } else if (metadata.date === 0 && metadata.lastUpdate !== 0) {
+        metadata.date = metadata.lastUpdate;
+      }
+
       const metadataVars = metadata;
       metadataVars.tags = metadata.tags.join(", ");
-      metadataVars.content = await mdread(mainContent, aiscriptHandler);
-      let requiredSourceTags = '';
-      if (metadataVars.content.match(/<ai-script>/)) {
-        requiredSourceTags += '<script src="/src/aiscript-element.js"></script>';
+
+      const concatVars = { ...metadataVars };
+      const preContent = await mdread(await replaceVars(mainContent, concatVars), aiscriptHandler);
+
+      concatVars.requiredSourceTags = '';
+      if (preContent.match(/<ai-script>/)) {
+        concatVars.requiredSourceTags += '<script src="/src/aiscript-element.js"></script>';
       }
-      if (metadataVars.content.match(/class="katex/)) {
-        if (requiredSourceTags !== '') {
-          requiredSourceTags += '\n';
+      if (preContent.match(/class="katex/)) {
+        if (concatVars.requiredSourceTags !== '') {
+          concatVars.requiredSourceTags += '\n';
         }
-        requiredSourceTags += '<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.47/dist/katex.min.css" integrity="sha384-nH0MfJ44wi1dd7w6jinlyBgljjS8EJAh2JBoRad8a3VDw2K69vfaaqm4WnR+gXtA" crossorigin="anonymous">';
+        concatVars.requiredSourceTags += '<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.47/dist/katex.min.css" integrity="sha384-nH0MfJ44wi1dd7w6jinlyBgljjS8EJAh2JBoRad8a3VDw2K69vfaaqm4WnR+gXtA" crossorigin="anonymous">';
       }
-      if (metadataVars.content.match(/<pre/)) {
-        if (requiredSourceTags !== '') {
-          requiredSourceTags += '\n';
+      if (preContent.match(/<pre/)) {
+        if (concatVars.requiredSourceTags !== '') {
+          concatVars.requiredSourceTags += '\n';
         }
-        requiredSourceTags += `<style>
+        concatVars.requiredSourceTags += `<style>
 @media (prefers-color-scheme: dark) {
   .shiki,
   .shiki span {
@@ -159,23 +201,58 @@ async function main() {
   }
 }</style>`;
       }
-      if (metadataVars.content.match(/<code>/)) {
-        if (requiredSourceTags !== '') {
-          requiredSourceTags += '\n';
+      if (preContent.match(/<code>/)) {
+        if (concatVars.requiredSourceTags !== '') {
+          concatVars.requiredSourceTags += '\n';
         }
-        requiredSourceTags += `<style>@import url('https://fonts.googleapis.com/css2?family=Google+Sans+Code:ital,wght,MONO@0,300..800,1;1,300..800,1&display=swap');code{font-family:"Google Sans Code",monospace;font-optical-sizing:auto;font-weight:400;font-style:normal;font-variation-settings:"MONO" 1;}</style>`;
+        concatVars.requiredSourceTags += `<style>
+@import url('https://fonts.googleapis.com/css2?family=Google+Sans+Code:ital,wght,MONO@0,300..800,1;1,300..800,1&display=swap');
+code {
+font-family: "Google Sans Code", monospace;
+font-optical-sizing: auto;
+font-weight:400;
+font-style: normal;
+font-variation-settings: "MONO" 1;
+}</style>`;
       }
-      const concatVars = { ...setting.var, ...metadataVars, requiredSourceTags };
-      const layoutPath = (concatVars.layout || "default") + '.html';
 
-      const html = await replaceVars(getLayout(layoutPath, layout), concatVars);
-      return html;
+      let tocItems = '';
+      for (let i = 0; i < preContent.length - 8; i++) {
+        if (preContent[i] === '<' && preContent[i + 1] === 'h' && preContent[i + 2].match(/\d/)) {
+          const slice = preContent.slice(i);
+          if (slice.match(/^<h\d id="[^"]*">/)) {
+            tocItems += `<li class="toc-item-${slice.match(/^<h(\d)/)[1]}"><a href="#${slice.match(/^<h\d id="([^"]*)">/)[1]}">${decodeURIComponent(slice.match(/^<h\d id="([^"]*)">/)[1].replace(/^\d+-/, ''))}</a></li>`;
+          }
+        }
+      }
+
+      concatVars.tableOfContents = (tocItems !== '' ? '<ul>' + tocItems + '</ul>' : '');
+
+      pageList.push(concatVars);
+
+      return { type: 'md', source: mainContent, vars: concatVars };
     } else {
-      return await replaceVars(content, setting.var);
+      return { type: 'html', source: content, vars: {} };
     }
   });
 
-  await writeOutput(pages);
+  pageList.sort((a, b) => {
+    const da = new Date(a.lastUpdate);
+    const db = new Date(b.lastUpdate);
+    if (da < db) {
+      return 1;
+    } else if (da == db) {
+      return 0;
+    } else {
+      return -1;
+    }
+  });
+
+  setting.var.pageList = ais.AiSON.stringify(pageList);
+
+  const output = await prerender(pages);
+
+  await writeOutput(output);
 }
 
 main();
