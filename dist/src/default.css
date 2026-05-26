@@ -91,6 +91,10 @@ p {
   margin: 40px 0px;
 }
 
+pre {
+  overflow-x: scroll;
+  padding: 10px 5px 30px 5px;
+}
 
 #metadata {
   padding: 20px;
@@ -98,6 +102,46 @@ p {
   border-radius: 10px;
 }
 
+#table-of-contents {
+  display: none;
+  padding: 50px;
+}
+
+#table-of-contents:has(ul) {
+  display: block;
+}
+
+#table-of-contents>div:nth-child(1) {
+  font-size: 24px;
+  font-weight: bold;
+  margin-bottom: 20px;
+}
+
+#table-of-contents>ul>li {
+  margin: 10px 0px;
+}
+
+.toc-item-1 {
+  font-size: 26px;
+}
+.toc-item-2 {
+  font-size: 20px;
+}
+.toc-item-3 {
+  font-size: 16px;
+}
+.toc-item-4 {
+  font-size: 14px;
+}
+.toc-item-5 {
+  font-size: 12px;
+}
+.toc-item-6 {
+  font-size: 10px;
+}
+#table-of-contents>ul>li:not(.toc-item-1)::marker {
+  content: '＊';
+}
 
 .center {
   text-align: center;

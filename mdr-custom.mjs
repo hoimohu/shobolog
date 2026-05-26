@@ -94,17 +94,17 @@ function inlineParser(md) {
   while (i < md.length) {
     const char = md[i];
 
-    if (char === '\\' && i + 1 < md.length) {
+    if (char === "\\" && i + 1 < md.length) {
       // エスケープ処理
       children.push({
         "type": "text",
-        "content": md[i + 1].replace('&', '&amp;').replace('<', '&lt;').replace('>', '&gt;')
+        "content": md[i + 1].replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
       });
       i += 2;
       continue;
-    } else if (char === '`') {
+    } else if (char === "`") {
       // インラインコード
-      const endIdx = md.indexOf('`', i + 1);
+      const endIdx = md.indexOf("`", i + 1);
       if (endIdx !== -1) {
         children.push({
           "type": "code",
@@ -113,7 +113,7 @@ function inlineParser(md) {
         i = endIdx + 1;
         continue;
       }
-    } else if (char === '*' || (char === '_' && (i === 0 || md[i - 1] === ' '))) {
+    } else if (char === "*" || (char === "_" && (i === 0 || md[i - 1] === " "))) {
       // strong または em
       const markerCount = countMarkersLimited(md, i, char);
 
@@ -154,24 +154,24 @@ function inlineParser(md) {
           continue;
         }
       }
-    } else if (char === '[') {
+    } else if (char === "[") {
       // リンク: [text](url "title")
-      let closeTextIdx = md.indexOf(']', i + 1);
-      if (closeTextIdx !== -1 && md[closeTextIdx + 1] === '(') {
+      let closeTextIdx = md.indexOf("]", i + 1);
+      if (closeTextIdx !== -1 && md[closeTextIdx + 1] === "(") {
         if (md.slice(i + 1).match(/^.*!\[.*\]\(.*\).*\]\(.*\)/)) {
           // リンク中に画像がある場合はリンクの子要素にする
           let depth = 0;
           for (let j = i + 1; j + 2 < md.length; j++) {
-            if (md.substring(j, j + 2) === '![') depth++;
-            if (md.substring(j, j + 2) === '](') depth--;
-            if (md[j] === ']' && depth < 0) {
+            if (md.substring(j, j + 2) === "![") depth++;
+            if (md.substring(j, j + 2) === "](") depth--;
+            if (md[j] === "]" && depth < 0) {
               closeTextIdx = j;
               break;
             }
           }
         }
-        const closeParenthesisIdx = md.indexOf(')', closeTextIdx + 2);
-        const nextSpaceIdx = md.indexOf(' ', closeTextIdx + 2);
+        const closeParenthesisIdx = md.indexOf(")", closeTextIdx + 2);
+        const nextSpaceIdx = md.indexOf(" ", closeTextIdx + 2);
         let title = null;
         let closeUrlIdx = closeParenthesisIdx;
         if (nextSpaceIdx !== -1 && nextSpaceIdx < closeParenthesisIdx && md.slice(nextSpaceIdx + 1).match(/^\s*".*"/)) {
@@ -191,11 +191,11 @@ function inlineParser(md) {
           i = closeParenthesisIdx + 1;
           continue;
         }
-      } else if (md[closeTextIdx + 1] === '[') {
+      } else if (md[closeTextIdx + 1] === "[") {
         // 参照リンク: [text][id]
-        const closeTextIdx = md.indexOf(']', i + 1);
-        if (closeTextIdx !== -1 && md[closeTextIdx + 1] === '[') {
-          const closeIdIdx = md.indexOf(']', closeTextIdx + 2);
+        const closeTextIdx = md.indexOf("]", i + 1);
+        if (closeTextIdx !== -1 && md[closeTextIdx + 1] === "[") {
+          const closeIdIdx = md.indexOf("]", closeTextIdx + 2);
           if (closeIdIdx !== -1) {
             const linkText = md.slice(i + 1, closeTextIdx);
             const linkId = md.slice(closeTextIdx + 2, closeIdIdx);
@@ -208,10 +208,10 @@ function inlineParser(md) {
             continue;
           }
         }
-      } else if (md[i + 1] === '^') {
+      } else if (md[i + 1] === "^") {
         // 脚注: [^id]
-        const closeTextIdx = md.indexOf(']', i + 1);
-        if (closeTextIdx !== -1 && md[i + 1] === '^') {
+        const closeTextIdx = md.indexOf("]", i + 1);
+        if (closeTextIdx !== -1 && md[i + 1] === "^") {
           const footnoteId = md.slice(i + 2, closeTextIdx);
           children.push({
             "type": "footnote",
@@ -221,9 +221,9 @@ function inlineParser(md) {
           continue;
         }
       }
-    } else if (char === '<') {
+    } else if (char === "<") {
       // 自動リンク: <url> または <email>
-      const closeIdx = md.indexOf('>', i + 1);
+      const closeIdx = md.indexOf(">", i + 1);
       if (closeIdx !== -1) {
         const content = md.slice(i + 1, closeIdx);
         if (content.match(/^[a-zA-Z]+:\/\//)) {
@@ -256,13 +256,13 @@ function inlineParser(md) {
         i = closeIdx + 1;
         continue;
       }
-    } else if (char === '!') {
+    } else if (char === "!") {
       // 画像: ![alt](url "title")
-      if (i + 1 < md.length && md[i + 1] === '[') {
-        const closeAltIdx = md.indexOf(']', i + 2);
-        if (closeAltIdx !== -1 && md[closeAltIdx + 1] === '(') {
-          const closeParenthesisIdx = md.indexOf(')', closeAltIdx + 2);
-          const nextSpaceIdx = md.indexOf(' ', closeAltIdx + 2);
+      if (i + 1 < md.length && md[i + 1] === "[") {
+        const closeAltIdx = md.indexOf("]", i + 2);
+        if (closeAltIdx !== -1 && md[closeAltIdx + 1] === "(") {
+          const closeParenthesisIdx = md.indexOf(")", closeAltIdx + 2);
+          const nextSpaceIdx = md.indexOf(" ", closeAltIdx + 2);
           let closeUrlIdx = closeParenthesisIdx;
           let title = null;
           if (nextSpaceIdx !== -1 && nextSpaceIdx < closeParenthesisIdx && md.slice(nextSpaceIdx + 1).match(/^\s*".*"/)) {
@@ -284,9 +284,9 @@ function inlineParser(md) {
           }
         }
       }
-    } else if (char === '$') {
+    } else if (char === "$") {
       // インライン数式: $...$
-      const closeIdx = md.indexOf('$', i + 1);
+      const closeIdx = md.indexOf("$", i + 1);
       if (closeIdx !== -1) {
         children.push({
           "type": "math",
@@ -295,7 +295,7 @@ function inlineParser(md) {
         i = closeIdx + 1;
         continue;
       }
-    } else if (char === '~') {
+    } else if (char === "~") {
       // 打ち消し線 または 下付き文字: ~~...~~ または ~...~
       const markerCount = countMarkersLimited(md, i, char);
 
@@ -322,9 +322,9 @@ function inlineParser(md) {
           continue;
         }
       }
-    } else if (char === '^') {
+    } else if (char === "^") {
       // 上付き文字: ^...^
-      const closeIdx = md.indexOf('^', i + 1);
+      const closeIdx = md.indexOf("^", i + 1);
       if (closeIdx !== -1) {
         children.push({
           "type": "superscript",
@@ -333,7 +333,7 @@ function inlineParser(md) {
         i = closeIdx + 1;
         continue;
       }
-    } else if (char === '=') {
+    } else if (char === "=") {
       // ハイライト: ==...==
       const closeIdx = findClosingMarker(md, i + 2, char, 2);
       if (closeIdx !== -1) {
@@ -376,9 +376,9 @@ function inlineParser(md) {
  */
 function splitTableLine(line) {
   let trimmed = line.trim();
-  if (trimmed.startsWith('|')) trimmed = trimmed.slice(1);
-  if (trimmed.endsWith('|')) trimmed = trimmed.slice(0, -1);
-  return trimmed.replace(/\\\\/g, '&#92;').replace(/\\\|/g, '&#124;').split('|').map(cell => cell.trim());
+  if (trimmed.startsWith("|")) trimmed = trimmed.slice(1);
+  if (trimmed.endsWith("|")) trimmed = trimmed.slice(0, -1);
+  return trimmed.replace(/\\\\/g, "&#92;").replace(/\\\|/g, "&#124;").split("|").map(cell => cell.trim());
 }
 
 /**
@@ -395,17 +395,17 @@ function isTableDividerLine(line) {
 /**
  * 区切り行トークンから整列情報を取得する
  * @param {string[]} cells 区切りセル文字列
- * @returns {Array<string>} left/center/right/''
+ * @returns {Array<string>} left/center/right/""
  */
 function parseTableAlign(cells) {
   return cells.map(cell => {
     const t = cell.trim();
-    const left = t.startsWith(':');
-    const right = t.endsWith(':');
-    if (left && right) return 'center';
-    if (left) return 'left';
-    if (right) return 'right';
-    return '';
+    const left = t.startsWith(":");
+    const right = t.endsWith(":");
+    if (left && right) return "center";
+    if (left) return "left";
+    if (right) return "right";
+    return "";
   });
 }
 
@@ -417,7 +417,7 @@ function parseTableAlign(cells) {
 function blockParser(md) {
   const children = [];
 
-  const lines = (md + '\n').split("\n");
+  const lines = (md + "\n").split("\n");
 
   let paragraphEnded = true;
 
@@ -623,7 +623,7 @@ function blockParser(md) {
     } else if (line.match(/^(==+|--+)$/)) {
       // Setextスタイルの見出し: ==... または --...
       if (children.length > 0 && children[children.length - 1].type === "paragraph") {
-        const level = line[0] === '=' ? 1 : 2;
+        const level = line[0] === "=" ? 1 : 2;
         children[children.length - 1] = {
           "type": "heading",
           "level": level,
@@ -632,9 +632,9 @@ function blockParser(md) {
       }
     } else if (line.match(/^\s*\[.*\]:\s/)) {
       // 参照定義または脚注定義
-      const closeIdIdx = line.indexOf(']');
-      if (closeIdIdx !== -1 && line[closeIdIdx + 1] === ':') {
-        if (line[1] === '^') {
+      const closeIdIdx = line.indexOf("]");
+      if (closeIdIdx !== -1 && line[closeIdIdx + 1] === ":") {
+        if (line[1] === "^") {
           // 脚注定義: [^id]: footnote
           const id = line.slice(2, closeIdIdx);
           const footnote = line.slice(closeIdIdx + 2).trim();
@@ -714,78 +714,154 @@ function findReferenceAndFootnotes(tree) {
   return { referenceMap, footnoteMap };
 }
 
+async function treeToText(node, aiscriptHandler) {
+  let text = "";
+  if (node.type === "text") {
+    text += node.content;
+  } else if (node.type === "lineBreak") {
+    text += "\n";
+  } else if (node.type === "em") {
+    text += (await Promise.all(node.children.map(async (child) => await treeToText(child, aiscriptHandler)))).join("");
+  } else if (node.type === "strong") {
+    text += (await Promise.all(node.children.map(async (child) => await treeToText(child, aiscriptHandler)))).join("");
+  } else if (node.type === "link") {
+    text += (await Promise.all(node.children.map(async (child) => await treeToText(child, aiscriptHandler)))).join("");
+  } else if (node.type === "image") {
+    text += node.alt;
+  } else if (node.type === "code") {
+    text += node.content;
+  } else if (node.type === "heading") {
+    text += (await Promise.all(node.children.map(async (child) => await treeToText(child, aiscriptHandler)))).join("") + "\n";
+  } else if (node.type === "paragraph") {
+    text += (await Promise.all(node.children.map(async (child) => await treeToText(child, aiscriptHandler)))).join("") + "\n";
+  } else if (node.type === "list") {
+    text += (await Promise.all(node.items.map(async (item) => (await Promise.all(item.children.map(async (child) => await treeToText(child, aiscriptHandler)))).join("")))).join("") + "\n";
+  } else if (node.type === "blockQuote") {
+    html += (await Promise.all(node.children.map(async (child) => await treeToText(child, aiscriptHandler)))).join("") + "\n";
+  } else if (node.type === "codeBlock") {
+    html += node.content + "\n";
+  } else if (node.type === "math") {
+    text += node.content;
+  } else if (node.type === "mathBlock") {
+    text += node.content + "\n";
+  } else if (node.type === "deleted") {
+    text += (await Promise.all(node.children.map(async (child) => await treeToText(child, aiscriptHandler)))).join("");
+  } else if (node.type === "subscript") {
+    text += (await Promise.all(node.children.map(async (child) => await treeToText(child, aiscriptHandler)))).join("");
+  } else if (node.type === "superscript") {
+    text += (await Promise.all(node.children.map(async (child) => await treeToText(child, aiscriptHandler)))).join("");
+  } else if (node.type === "highlight") {
+    text += (await Promise.all(node.children.map(async (child) => await treeToText(child, aiscriptHandler)))).join("");
+  } else if (node.type === "table") {
+    text += `${(await Promise.all(node.header.map(
+      async (cell, i) => `${(await Promise.all(cell.map(
+        async (child) => await treeToText(child, aiscriptHandler)
+      ))).join("")
+        }\n`))).join("")
+      }${(await Promise.all(node.rows.map(
+        async (row) => `${(await Promise.all(row.map(
+          async (cell, i) => `${(await Promise.all(cell.map(
+            async (child) => await treeToText(child, aiscriptHandler)
+          ))).join("")
+            }`
+        ))).join("")
+          }\n`
+      ))).join("")}`;
+  } else if (node.type === "note") {
+    text += (await Promise.all(node.children.map(async (child) => await treeToText(child, aiscriptHandler)))).join("");
+  } else if (node.type === "aiscript") {
+    if (node.scriptType === "dynamic") {
+      text += node.content;
+    } else {
+      const result = aiscriptHandler ? await aiscriptHandler(node.content) : "";
+      const tree = {
+        "type": "root",
+        "children": blockParser(result)
+      };
+      text += await treeToText(tree, aiscriptHandler);
+    }
+  } else if (node.type === "thematicBreak") {
+    text += "\n";
+  } else if (node.type === "root") {
+    text += (await Promise.all(node.children.map(async (child) => await treeToText(child, aiscriptHandler)))).join("");
+  }
+
+  return text;
+}
+
 /**
  * 構文木をHTMLに変換する
  * @param {object} node 構文木
  * @param {object} referenceMap 参照定義のマップ
  * @param {object} footnoteMap 脚註のマップ
  * @param {function} aiscriptHandler aiscriptの処理関数
+ * @param {Generator} counter カウントアップするジェネレーター
  * @returns {string} HTMLの文字列
  */
-async function treeToHTML(node, referenceMap = {}, footnoteMap = {}, aiscriptHandler) {
+async function treeToHTML(node, referenceMap = {}, footnoteMap = {}, aiscriptHandler, counter) {
   let html = "";
   if (node.type === "text") {
     html += node.content;
   } else if (node.type === "lineBreak") {
     html += "<br>";
   } else if (node.type === "em") {
-    html += `<em>${(await Promise.all(node.children.map(async (child) => await treeToHTML(child, referenceMap, footnoteMap, aiscriptHandler)))).join("")}</em>`;
+    html += `<em>${(await Promise.all(node.children.map(async (child) => await treeToHTML(child, referenceMap, footnoteMap, aiscriptHandler, counter)))).join("")}</em>`;
   } else if (node.type === "strong") {
-    html += `<strong>${(await Promise.all(node.children.map(async (child) => await treeToHTML(child, referenceMap, footnoteMap, aiscriptHandler)))).join("")}</strong>`;
+    html += `<strong>${(await Promise.all(node.children.map(async (child) => await treeToHTML(child, referenceMap, footnoteMap, aiscriptHandler, counter)))).join("")}</strong>`;
   } else if (node.type === "link") {
     const titleAttr = node.title ? ` title="${node.title.replace(/"/g, "&quot;")}"` : "";
-    html += `<a href="${node.url.replace(/"/g, "%22")}"${titleAttr}${node.url.match(/^http/)?' target="_blank"':''}>${(await Promise.all(node.children.map(async (child) => await treeToHTML(child, referenceMap, footnoteMap, aiscriptHandler)))).join("")}</a>`;
+    html += `<a href="${node.url.replace(/"/g, "%22")}"${titleAttr}${node.url.match(/^http/) ? ' target="_blank"' : ""}>${(await Promise.all(node.children.map(async (child) => await treeToHTML(child, referenceMap, footnoteMap, aiscriptHandler, counter)))).join("")}</a>`;
   } else if (node.type === "image") {
     const titleAttr = node.title ? ` title="${node.title.replace(/"/g, "&quot;")}"` : "";
     html += `<img src="${node.url.replace(/"/g, "&quot;")}" alt="${node.alt.replace(/"/g, "&quot;")}"${titleAttr}>`;
   } else if (node.type === "code") {
     html += `<code>${node.content.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")}</code>`;
   } else if (node.type === "heading") {
-    html += `<h${node.level}>${(await Promise.all(node.children.map(async (child) => await treeToHTML(child, referenceMap, footnoteMap, aiscriptHandler)))).join("")}</h${node.level}>`;
+    html += `<h${node.level} id="${counter.next().value}-${encodeURIComponent((await treeToText(node, aiscriptHandler)).trim())}">${(await Promise.all(node.children.map(async (child) => await treeToHTML(child, referenceMap, footnoteMap, aiscriptHandler, counter)))).join("")}</h${node.level}>`;
   } else if (node.type === "paragraph") {
-    html += `<p>${(await Promise.all(node.children.map(async (child) => await treeToHTML(child, referenceMap, footnoteMap, aiscriptHandler)))).join("")}</p>`;
+    html += `<p>${(await Promise.all(node.children.map(async (child) => await treeToHTML(child, referenceMap, footnoteMap, aiscriptHandler, counter)))).join("")}</p>`;
   } else if (node.type === "list") {
     const tag = node.ordered ? "ol" : "ul";
-    html += `<${tag}>${(await Promise.all(node.items.map(async (item) => `<li>${item.type === 'checkListItem' ? `<input type="checkbox" disabled ${item.checked ? 'checked' : ''}> ` : ''}${(await Promise.all(item.children.map(async (child) => await treeToHTML(child, referenceMap, footnoteMap, aiscriptHandler)))).join("")}</li>`))).join("")}</${tag}>`;
+    html += `<${tag}>${(await Promise.all(node.items.map(async (item) => `<li>${item.type === "checkListItem" ? `<input type="checkbox" disabled ${item.checked ? "checked" : ""}> ` : ""}${(await Promise.all(item.children.map(async (child) => await treeToHTML(child, referenceMap, footnoteMap, aiscriptHandler, counter)))).join("")}</li>`))).join("")}</${tag}>`;
   } else if (node.type === "blockQuote") {
-    html += `<blockquote>${(await Promise.all(node.children.map(async (child) => await treeToHTML(child, referenceMap, footnoteMap, aiscriptHandler)))).join("")}</blockquote>`;
+    html += `<blockquote>${(await Promise.all(node.children.map(async (child) => await treeToHTML(child, referenceMap, footnoteMap, aiscriptHandler, counter)))).join("")}</blockquote>`;
   } else if (node.type === "codeBlock") {
-    html += await codeToHtml(node.content, {lang: node.language, themes: {light: "ayu-light", dark: "ayu-dark"}});
+    html += await codeToHtml(node.content, { lang: node.language, themes: { light: "ayu-light", dark: "ayu-dark" } });
   } else if (node.type === "math") {
-    console.log('inline:' + node.content);
+    console.log("inline:" + node.content);
     html += await katex.renderToString(node.content, {
       displayMode: false
     });
   } else if (node.type === "mathBlock") {
-    console.log('block:' + node.content);
+    console.log("block:" + node.content);
     html += await katex.renderToString(node.content, {
       displayMode: true
     });
   } else if (node.type === "deleted") {
-    html += `<del>${(await Promise.all(node.children.map(async (child) => await treeToHTML(child, referenceMap, footnoteMap, aiscriptHandler)))).join("")}</del>`;
+    html += `<del>${(await Promise.all(node.children.map(async (child) => await treeToHTML(child, referenceMap, footnoteMap, aiscriptHandler, counter)))).join("")}</del>`;
   } else if (node.type === "subscript") {
-    html += `<sub>${(await Promise.all(node.children.map(async (child) => await treeToHTML(child, referenceMap, footnoteMap, aiscriptHandler)))).join("")}</sub>`;
+    html += `<sub>${(await Promise.all(node.children.map(async (child) => await treeToHTML(child, referenceMap, footnoteMap, aiscriptHandler, counter)))).join("")}</sub>`;
   } else if (node.type === "superscript") {
-    html += `<sup>${(await Promise.all(node.children.map(async (child) => await treeToHTML(child, referenceMap, footnoteMap, aiscriptHandler)))).join("")}</sup>`;
+    html += `<sup>${(await Promise.all(node.children.map(async (child) => await treeToHTML(child, referenceMap, footnoteMap, aiscriptHandler, counter)))).join("")}</sup>`;
   } else if (node.type === "highlight") {
-    html += `<mark>${(await Promise.all(node.children.map(async (child) => await treeToHTML(child, referenceMap, footnoteMap, aiscriptHandler)))).join("")}</mark>`;
+    html += `<mark>${(await Promise.all(node.children.map(async (child) => await treeToHTML(child, referenceMap, footnoteMap, aiscriptHandler, counter)))).join("")}</mark>`;
   } else if (node.type === "table") {
     html += `<table><thead><tr>${(await Promise.all(node.header.map(
       async (cell, i) => `<th style="text-align:${node.align[i]}">${(await Promise.all(cell.map(
-        async (child) => await treeToHTML(child, referenceMap, footnoteMap, aiscriptHandler)
+        async (child) => await treeToHTML(child, referenceMap, footnoteMap, aiscriptHandler, counter)
       ))).join("")
         }</th>`))).join("")
       }</tr></thead><tbody>${(await Promise.all(node.rows.map(
         async (row) => `<tr>${(await Promise.all(row.map(
           async (cell, i) => `<td style="text-align:${node.align[i]}">${(await Promise.all(cell.map(
-            async (child) => await treeToHTML(child, referenceMap, footnoteMap, aiscriptHandler)
+            async (child) => await treeToHTML(child, referenceMap, footnoteMap, aiscriptHandler, counter)
           ))).join("")
             }</td>`
         ))).join("")
           }</tr>`
       ))).join("")}</tbody></table>`;
   } else if (node.type === "note") {
-    html += `<div class="note ${node.noteType}">${(await Promise.all(node.children.map(async (child) => await treeToHTML(child, referenceMap, footnoteMap, aiscriptHandler)))).join("")}</div>`;
+    html += `<div class="note ${node.noteType}">${(await Promise.all(node.children.map(async (child) => await treeToHTML(child, referenceMap, footnoteMap, aiscriptHandler, counter)))).join("")}</div>`;
   } else if (node.type === "aiscript") {
     if (node.scriptType === "dynamic") {
       html += `<ai-script>${node.content}</ai-script>`;
@@ -795,7 +871,7 @@ async function treeToHTML(node, referenceMap = {}, footnoteMap = {}, aiscriptHan
         "type": "root",
         "children": blockParser(result)
       };
-      const newHtml = await treeToHTML(tree, referenceMap, footnoteMap, aiscriptHandler);
+      const newHtml = await treeToHTML(tree, referenceMap, footnoteMap, aiscriptHandler, counter);
       html += newHtml;
     }
   } else if (node.type === "thematicBreak") {
@@ -807,12 +883,23 @@ async function treeToHTML(node, referenceMap = {}, footnoteMap = {}, aiscriptHan
     const reference = Object.hasOwn(referenceMap, node.id) ? referenceMap[node.id] : null;
     const url = reference !== null ? reference.url : "#";
     const title = (reference !== null && reference.title ? ` title="${reference.title.replace(/"/g, "&quot;")}"` : "");
-    html += `<a href="${url.replace(/"/g, "&quot;")}"${title}>${(await Promise.all(node.children.map(async (child) => await treeToHTML(child, referenceMap, footnoteMap, aiscriptHandler)))).join("")}</a>`;
+    html += `<a href="${url.replace(/"/g, "&quot;")}"${title}>${(await Promise.all(node.children.map(async (child) => await treeToHTML(child, referenceMap, footnoteMap, aiscriptHandler, counter)))).join("")}</a>`;
   } else if (node.type === "root") {
-    html += (await Promise.all(node.children.map(async (child) => await treeToHTML(child, referenceMap, footnoteMap, aiscriptHandler)))).join("");
+    html += (await Promise.all(node.children.map(async (child) => await treeToHTML(child, referenceMap, footnoteMap, aiscriptHandler, counter)))).join("");
   }
 
   return html;
+}
+
+/**
+ * カウントアップするジェネレーター
+ * @yields {number} カウント
+ */
+function* countGenerator() {
+  let count = 0;
+  while (true) {
+    yield count++;
+  }
 }
 
 /**
@@ -828,7 +915,7 @@ async function mdread(md, aiscriptHandler = null) {
   };
 
   const { referenceMap, footnoteMap } = findReferenceAndFootnotes(tree);
-  let html = await treeToHTML(tree, referenceMap, footnoteMap, aiscriptHandler);
+  let html = await treeToHTML(tree, referenceMap, footnoteMap, aiscriptHandler, countGenerator());
 
   if (Object.keys(footnoteMap).length > 0) {
     html += '<div class="footnotes">';
