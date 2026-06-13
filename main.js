@@ -149,7 +149,7 @@ async function main() {
           mainContent = spl.slice(i + 1).join("\n");
           break;
         } else {
-          const match = line.match(/^([^:]+):\s*(\S*)$/);
+          const match = line.match(/^([^:]+):\s*(.*)$/);
           if (match) {
             if (match[1] === "tags") {
               while (++i < spl.length && spl[i].startsWith("-") && spl[i].trim() !== "---") {
@@ -176,7 +176,7 @@ async function main() {
       metadataVars.tags = metadata.tags.join(", ");
 
       const concatVars = { ...metadataVars };
-      const preContent = await mdread(await replaceVars(mainContent, concatVars), aiscriptHandler);
+      const preContent = await mdread(await replaceVars(mainContent, {...concatVars, pageList : '[]'}), aiscriptHandler);
 
       concatVars.requiredSourceTags = '';
       if (preContent.match(/<ai-script>/)) {

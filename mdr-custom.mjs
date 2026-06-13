@@ -828,12 +828,10 @@ async function treeToHTML(node, referenceMap = {}, footnoteMap = {}, aiscriptHan
   } else if (node.type === "codeBlock") {
     html += await codeToHtml(node.content, { lang: node.language, themes: { light: "ayu-light", dark: "ayu-dark" } });
   } else if (node.type === "math") {
-    console.log("inline:" + node.content);
     html += await katex.renderToString(node.content, {
       displayMode: false
     });
   } else if (node.type === "mathBlock") {
-    console.log("block:" + node.content);
     html += await katex.renderToString(node.content, {
       displayMode: true
     });
