@@ -9,7 +9,6 @@ tags:
 
 :::aiscript
 let pages = {{pageList}}
-var count = 0;
 each let v, pages {
   <: `* { v.lastUpdate } - [{ v.title }]({ v.path }){ Str:lf }`
 }

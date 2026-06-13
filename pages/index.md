@@ -12,7 +12,7 @@ tags:
 
 :::aiscript
 let pages = {{pageList}}
-var count = 0;
+var count = 0
 each let v, pages {
   if v.path != "/" {
     <: `* { v.lastUpdate } - [{ v.title }]({ v.path }){ Str:lf }`
