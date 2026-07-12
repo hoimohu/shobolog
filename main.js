@@ -1,45 +1,18 @@
-import { promises as fs } from "node:fs";
-import path from "node:path";
-import * as ais from "@syuilo/aiscript";
-import mdread from "./mdr-custom.mjs";
+import { promises as fs } from 'node:fs';
+import path from 'node:path';
+import * as ais from '@syuilo/aiscript';
+import mdread from './src/mdr-custom.mjs';
+import { getAllFiles } from './src/fileutil.mjs';
+import { generateTableOfContents, getMetadata, getRequiredTags } from './src/mdutil.mjs';
+import { writeOutput } from './src/fileutil.mjs';
 
+// 実行するときに日時を表示
 console.log(new Date().toLocaleString());
 
+// 作業ディレクトリ
 const currentDir = process.cwd();
 
-const setting = JSON.parse(await fs.readFile(path.join(currentDir, "setting.json"), "utf-8"));
-
-const pagesDir = path.join(currentDir, setting.targetDir.pages);
-const layoutDir = path.join(currentDir, setting.targetDir.layout);
-const outputDir = path.join(currentDir, setting.targetDir.output);
-
-async function getAllFiles(dir, converter) {
-  const entries = await fs.readdir(dir, { withFileTypes: true });
-  const dirObj = {
-    name: path.basename(dir),
-    dirs: [],
-    files: {}
-  };
-  for (const entry of entries) {
-    const fullPath = path.join(dir, entry.name);
-    if (entry.isFile()) {
-      const fileContent = await fs.readFile(fullPath, "utf-8");
-      dirObj.files[entry.name] = await converter(fileContent, fullPath);
-    } else if (entry.isDirectory()) {
-      dirObj.dirs.push(await getAllFiles(fullPath, converter));
-    }
-  }
-  return dirObj;
-}
-
-const layout = await getAllFiles(layoutDir, async (content) => content.replace(/\n|\r\n|\r/g, '\n'));
-
-async function replaceVars(content, vars) {
-  return content.replace(/\{\{(\w+)\}\}/g, (match, varName) => {
-    return vars[varName] || "";
-  });
-}
-
+// AiScriptの実行結果を文字列に変換する関数
 function valueToString(v) {
   const output = ais.utils.valToJs(v);
   switch (typeof output) {
@@ -59,11 +32,11 @@ function valueToString(v) {
       return ais.utils.valToString(v);
   }
 }
-
+// AiScriptパーサー (再利用する)
 const parser = new ais.Parser();
-
+// mdreadreに渡す、AiScriptを処理するための関数
 async function aiscriptHandler(script) {
-  let output = "";
+  let output = '';
   const interpreter = new ais.Interpreter({}, {
     out: (value) => {
       output += valueToString(value);
@@ -74,168 +47,63 @@ async function aiscriptHandler(script) {
     await interpreter.exec(ast);
     return output;
   } catch (error) {
-    console.error("Error occurred while running AIScript:", error);
-    return "";
+    console.error('Error occurred while running AIScript:', error);
+    return '';
   }
 }
 
-function getLayout(path, directory) {
-  const spl = path.split("/");
-  if (spl.length > 1) {
-    return getLayout(spl.slice(1).join("/"), directory.dirs.find(dir => dir.name === spl[0]));
-  } else {
-    return directory.files[path] || "";
-  }
-}
+// ページを生成する
+export async function generatePages() {
+  // 設定ファイル読み込み
+  const setting = JSON.parse(await fs.readFile(path.join(currentDir, 'setting.json'), 'utf-8'));
+  // もろもろのパス
+  const pagesDir = path.join(currentDir, setting.targetDir.pages);
+  const layoutDir = path.join(currentDir, setting.targetDir.layout);
+  const varsDir = path.join(currentDir, setting.targetDir.vars);
+  const outputDir = path.join(currentDir, setting.targetDir.output);
 
-async function writeOutput(dir, basePath = "") {
-  if (basePath !== "") {
-    await fs.mkdir(path.join(outputDir, basePath), { recursive: true });
-  }
-  for (const fileName in dir.files) {
-    await fs.writeFile(path.join(outputDir, basePath, fileName.replace(/\.md$/, ".html")), dir.files[fileName], "utf-8");
-  }
-  for (const subDir of dir.dirs) {
-    await writeOutput(subDir, path.join(basePath, subDir.name));
-  }
-}
+  // レイアウトのファイルを取得
+  const layout = await getAllFiles(layoutDir);
+  // 変数ファイルを読み込む
+  const varsFile = await getAllFiles(varsDir);
 
-async function prerender(dir, basePath = "") {
-  const dirObj = {
-    name: path.basename(basePath),
-    dirs: [],
-    files: {}
-  };
-  for (const fileName in dir.files) {
-    const file = dir.files[fileName];
-    const vars = { ...setting.var, ...file.vars };
-    if (file.type === 'md') {
-      // md
-      vars.content = await mdread(await replaceVars(file.source, vars), aiscriptHandler);
-      const layoutPath = (vars.layout || "default") + '.html';
-      dirObj.files[fileName] = await replaceVars(getLayout(layoutPath, layout), vars);
-    } else if (file.type === 'html') {
-      // html
-      dirObj.files[fileName] = await replaceVars(file.source, vars);
-    }
+  // 変数を置換する関数
+  async function replaceVars(content, vars) {
+    return content.replace(/\{\{([^\{\}]+)\}\}/g, (match, varName) => {
+      return vars[varName] || '';
+    });
   }
-  for (const subDir of dir.dirs) {
-    dirObj.dirs.push(await prerender(subDir, path.join(basePath, subDir.name)));
-  }
-  return dirObj;
-}
 
-async function main() {
+  const pageFiles = await getAllFiles(pagesDir);
+  const pageSources = {};
   const pageList = [];
 
-  const pages = await getAllFiles(pagesDir, async (content, fullPath) => {
-    if (fullPath.endsWith(".md")) {
+  // メタデータを取得し、変数を設定する
+  for (const key in pageFiles) {
+    const content = pageFiles[key];
+    if (key.endsWith('md')) {
       const metadata = {
-        tags: [],
-        content: "",
-        date: 0,
-        lastUpdate: 0,
-        path: '/' + path.relative(pagesDir, fullPath).replace(/\\/g, '/').replace(/\.md$/, '.html').replace(/index\.html$/, '')
+        ...await getMetadata(content),
+        path: ('/' + key.replace(/\\/g, '/').replace(/\.md$/, '.html').replace(/index\.html$/, ''))
       };
-      let start = false;
-      let mainContent = content.replace(/\n|\r\n|\r/g, '\n');
-      const spl = mainContent.split('\n');
-      for (let i = 0; i < spl.length; i++) {
-        const line = spl[i];
-        if (!start && line.trim() === "---") {
-          start = true;
-          continue;
-        } else if (start && line.trim() === "---") {
-          mainContent = spl.slice(i + 1).join("\n");
-          break;
-        } else {
-          const match = line.match(/^([^:]+):\s*(.*)$/);
-          if (match) {
-            if (match[1] === "tags") {
-              while (++i < spl.length && spl[i].startsWith("-") && spl[i].trim() !== "---") {
-                const tagMatch = spl[i].match(/-\s+(.+)/);
-                if (tagMatch) {
-                  metadata[match[1]].push(tagMatch[1]);
-                }
-              }
-              i--;
-            } else {
-              metadata[match[1]] = match[2];
-            }
-          }
-        }
-      }
+      pageList.push({...metadata, content});
+      const concatVars = { requiredTags: '', ...setting.var, ...varsFile, ...metadata };
+      concatVars.tags = metadata.tags.join(", ");
 
-      if (metadata.lastUpdate === 0 && metadata.date !== 0) {
-        metadata.lastUpdate = metadata.date;
-      } else if (metadata.date === 0 && metadata.lastUpdate !== 0) {
-        metadata.date = metadata.lastUpdate;
-      }
+      // この後の処理のために仮レンダリングする
+      const preRenderedContent = await mdread(await replaceVars(concatVars.content, { ...concatVars, pageList: '[]' }), aiscriptHandler);
+      concatVars.requiredTags += await getRequiredTags(preRenderedContent);
+      concatVars.tableOfContents = await generateTableOfContents(preRenderedContent);
+      pageSources[key] = { type: 'md', source: concatVars.content, vars: concatVars };
 
-      const metadataVars = metadata;
-      metadataVars.tags = metadata.tags.join(", ");
-
-      const concatVars = { ...metadataVars };
-      const preContent = await mdread(await replaceVars(mainContent, {...concatVars, pageList : '[]'}), aiscriptHandler);
-
-      concatVars.requiredSourceTags = '';
-      if (preContent.match(/<ai-script>/)) {
-        concatVars.requiredSourceTags += '<script src="/src/aiscript-element.js"></script>';
-      }
-      if (preContent.match(/class="katex/)) {
-        if (concatVars.requiredSourceTags !== '') {
-          concatVars.requiredSourceTags += '\n';
-        }
-        concatVars.requiredSourceTags += '<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.47/dist/katex.min.css" integrity="sha384-nH0MfJ44wi1dd7w6jinlyBgljjS8EJAh2JBoRad8a3VDw2K69vfaaqm4WnR+gXtA" crossorigin="anonymous">';
-      }
-      if (preContent.match(/<pre/)) {
-        if (concatVars.requiredSourceTags !== '') {
-          concatVars.requiredSourceTags += '\n';
-        }
-        concatVars.requiredSourceTags += `<style>
-@media (prefers-color-scheme: dark) {
-  .shiki,
-  .shiki span {
-    color: var(--shiki-dark) !important;
-    background-color: var(--shiki-dark-bg) !important;
-  }
-}</style>`;
-      }
-      if (preContent.match(/<code>/)) {
-        if (concatVars.requiredSourceTags !== '') {
-          concatVars.requiredSourceTags += '\n';
-        }
-        concatVars.requiredSourceTags += `<style>
-@import url('https://fonts.googleapis.com/css2?family=Google+Sans+Code:ital,wght,MONO@0,300..800,1;1,300..800,1&display=swap');
-code {
-font-family: "Google Sans Code", monospace;
-font-optical-sizing: auto;
-font-weight:400;
-font-style: normal;
-font-variation-settings: "MONO" 1;
-}</style>`;
-      }
-
-      let tocItems = '';
-      for (let i = 0; i < preContent.length - 8; i++) {
-        if (preContent[i] === '<' && preContent[i + 1] === 'h' && preContent[i + 2].match(/\d/)) {
-          const slice = preContent.slice(i);
-          if (slice.match(/^<h\d id="[^"]*">/)) {
-            tocItems += `<li class="toc-item-${slice.match(/^<h(\d)/)[1]}"><a href="#${slice.match(/^<h\d id="([^"]*)">/)[1]}">${decodeURIComponent(slice.match(/^<h\d id="([^"]*)">/)[1].replace(/^\d+-/, ''))}</a></li>`;
-          }
-        }
-      }
-
-      concatVars.tableOfContents = (tocItems !== '' ? '<ul>' + tocItems + '</ul>' : '');
-
-      pageList.push(concatVars);
-
-      return { type: 'md', source: mainContent, vars: concatVars };
+    } else if (key.match(/(\.htm|\.html)$/)) {
+      pageSources[key] = { type: 'html', source: content, vars: concatVars };
     } else {
-      return { type: 'html', source: content, vars: {} };
+      pageSources[key] = { type: 'unknown', source: content, vars: concatVars };
     }
-  });
+  }
 
+  // pageListを最終更新日でソート
   pageList.sort((a, b) => {
     const da = new Date(a.lastUpdate);
     const db = new Date(b.lastUpdate);
@@ -248,11 +116,35 @@ font-variation-settings: "MONO" 1;
     }
   });
 
-  setting.var.pageList = ais.AiSON.stringify(pageList);
+  const pageListVar = ais.AiSON.stringify(pageList);
 
-  const output = await prerender(pages);
+  // 本番レンダリング
+  const output = {};
+  for (const key in pageSources) {
+    const page = pageSources[key];
+    const vars = { ...page.vars, pageList: pageListVar };
+    for (const key in vars) {
+      if (key.endsWith('.md')) {
+        vars[key] = await mdread(await replaceVars(vars[key], vars), aiscriptHandler);
+      } else if (key.endsWith('.ais')) {
+        vars[key] = await aiscriptHandler(await replaceVars(vars[key], vars));
+      }
+    }
+    const outputPath = path.join(outputDir, (key.replace(/\.md$/, '.html')));
+    if (page.type === 'md') {
+      vars.content = await mdread(await replaceVars(page.source, vars), aiscriptHandler);
+      const layoutPath = (vars.layout || 'default') + '.html';
+      output[outputPath] = await replaceVars(layout[layoutPath], vars);
+    } else if (page.type === 'html') {
+      output[outputPath] = await replaceVars(page.source, vars);
+    }
+  }
 
-  await writeOutput(output);
+  return output;
+}
+
+async function main() {
+  await writeOutput(await generatePages());
 }
 
 main();

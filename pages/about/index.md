@@ -3,8 +3,10 @@ layout: default
 title: このサイトについて
 author: hoimohu/ShoboiNamae
 date: 2026/05/24
+lastUpdate: 2026/07/10
 tags:
 - about
+- ignore
 ---
 
 # このサイトは何

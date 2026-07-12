@@ -1,0 +1,23 @@
+<: `<!-- OGP tags -->
+<meta property="og:type" content="article">
+<meta property="og:title" content="{{title}}">
+<meta property="og:description" content="{{description}}">
+<meta property="og:url" content="{{rootURL}}{{path}}">
+<meta property="og:locale" content="ja_JP">
+<meta property="og:image" content="{{ogImageURL}}">
+<meta property="og:site_name" content="{{blogName}}">
+<!-- OGP tags for article sites -->
+<meta property="article:published_time" content="{ '{{date}}'.split('/').join('-') }T12:00:00+09:00">
+<meta property="article:modified_time" content="{ '{{lastUpdate}}'.split('/').join('-') }T12:00:00+09:00">
+<meta property="article:author" content="{{author}}">
+`
+each let tag, '{{tags}}'.split(', ') {
+  <: `<meta property="article:tag" content="{ tag }">
+`
+}
+<: `<!-- Twitter Card tags -->
+<meta name="twitter:card" content="summary">
+<meta name="twitter:site" content="@hoimohu_jessica">
+<meta name="twitter:title" content="{{title}} - {{blogName}}">
+<meta name="twitter:description" content="{{description}}">
+<meta name="twitter:image" content="{{ogImageURL}}">`
