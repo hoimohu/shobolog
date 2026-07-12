@@ -3,13 +3,19 @@ layout: default
 title: Codeforces 1103 (Div. 3) C問題 解法が証明できない...
 author: hoimohu/ShoboiNamae
 date: 2026/06/13
+lastUpdate: 2026/07/10
 tags:
 - article
 - ブログ
 - Codeforces
 - 競プロ
 - 記事6
+- ignore
 ---
+
+# 変更 (2026年7月10日)
+
+あまりにも中途半端な記事になってしまっていたので、一旦ホームページの目次から消しました。
 
 [前記事はこちら](../cf1103c/)
 

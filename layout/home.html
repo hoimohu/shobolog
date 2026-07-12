@@ -1,10 +1,25 @@
 <!DOCTYPE html>
 <html lang="ja">
 
-<head>
+<head prefix="og: https://ogp.me/ns#">
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <!-- OGP tags -->
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="{{blogName}}">
+  <meta property="og:description" content="{{description}}">
+  <meta property="og:url" content="{{rootURL}}/">
+  <meta property="og:locale" content="ja_JP">
+  <meta property="og:image" content="{{ogImageURL}}">
+  <meta property="og:site_name" content="{{blogName}}">
+  <!-- Twitter Card tags -->
+  <meta name="twitter:card" content="summary">
+  <meta name="twitter:site" content="@hoimohu_jessica">
+  <meta name="twitter:title" content="{{blogName}}">
+  <meta name="twitter:description" content="{{description}}">
+  <meta name="twitter:image" content="{{ogImageURL}}">
   <title>{{blogName}}</title>
+  <meta name="description" content="{{description}}">
   <link rel="stylesheet" href="/src/default.css">
   <style>
     #welcome {
@@ -37,7 +52,7 @@
       }
     }
   </style>
-  {{requiredSourceTags}}
+  {{requiredTags}}
 </head>
 
 <body>
@@ -61,7 +76,7 @@
     <div><a href="/">ホームページ</a></div>
     <div><a href="/about">このサイトについて</a></div>
     <div><a href="/all">全てのページ</a></div>
-    <div>(c) 2026 hoimohu</div>
+    <div>{{copyright}}</div>
   </footer>
 </body>
 

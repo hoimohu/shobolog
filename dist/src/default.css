@@ -2,6 +2,7 @@
   --background-color: #fff;
   --text-color: #000;
   --hyperlink-color: #00f;
+  --hover-background-color: #ccc;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -9,6 +10,7 @@
     --background-color: #232325;
     --text-color: #ccc;
     --hyperlink-color: #0ff;
+    --hover-background-color: #666;
   }
 }
 
@@ -117,30 +119,23 @@ pre {
   margin-bottom: 20px;
 }
 
-#table-of-contents>ul>li {
-  margin: 10px 0px;
+#table-of-contents ul {
+  padding-left: 20px;
 }
 
-.toc-item-1 {
-  font-size: 26px;
+#table-of-contents li {
+  padding: 4px;
+  border-bottom: var(--text-color) solid 1px;
 }
-.toc-item-2 {
-  font-size: 20px;
+
+#table-of-contents li:hover {
+  background-color: var(--hover-background-color);
 }
-.toc-item-3 {
-  font-size: 16px;
-}
-.toc-item-4 {
-  font-size: 14px;
-}
-.toc-item-5 {
-  font-size: 12px;
-}
-.toc-item-6 {
-  font-size: 10px;
-}
-#table-of-contents>ul>li:not(.toc-item-1)::marker {
-  content: '＊';
+
+.katex-display {
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding: 10px;
 }
 
 .center {
@@ -149,4 +144,9 @@ pre {
 
 .wide-margin {
   margin: 100px;
+}
+
+span.line {
+  display: inline-block;
+  margin: 2px 0;
 }
