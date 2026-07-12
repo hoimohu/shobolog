@@ -2,9 +2,14 @@
   "targetDir": {
     "pages": "pages",
     "layout": "layout",
+    "vars": "vars",
     "output": "dist"
   },
   "var": {
-    "blogName": "しょぼなまログ"
+    "blogName": "しょぼなまログ",
+    "copyright": "(c) 2026 hoimohu/ShoboiNamae",
+    "description": "hoimohuとShoboiNamaeの個人サイトです",
+    "rootURL": "https://shobolog.pages.dev",
+    "ogImageURL": "https://shobolog.pages.dev/src/img/shobonamalog-ogp.jpg"
   }
 }

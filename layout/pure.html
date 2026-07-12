@@ -1,11 +1,13 @@
 <!DOCTYPE html>
 <html lang="ja">
-<head>
+<head prefix="og: https://ogp.me/ns#">
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  {{ogp-website.ais}}
   <title>{{title}} - {{blogName}}</title>
+  <meta name="description" content="{{description}}">
   <link rel="stylesheet" href="/src/default.css">
-  {{requiredSourceTags}}
+  {{requiredTags}}
 </head>
 <body>
   <header class="center">
@@ -18,7 +20,7 @@
     <div><a href="/">ホームページ</a></div>
     <div><a href="/about">このサイトについて</a></div>
     <div><a href="/all">全てのページ</a></div>
-    <div>(c) 2026 hoimohu</div>
+    <div>{{copyright}}</div>
   </footer>
 </body>
 </html>
