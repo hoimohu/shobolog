@@ -1,6 +1,6 @@
 {
   "name": "shobonamalog",
-  "version": "2.0.0",
+  "version": "2.0.1",
   "description": "A HTML and Markdown based blog",
   "main": "main.js",
   "type": "module",

@@ -93,7 +93,6 @@ font-variation-settings: "MONO" 1;
 
 // 目次の生成
 export async function generateTableOfContents(content) {
-  // 目次の関係をObjectの階層構造で表現
   const tableOfContents = {
     type: 'object',
     depth: 0,
@@ -135,13 +134,17 @@ export async function generateTableOfContents(content) {
   // 階層構造を<ul>に直す
   let tableOfContentsItems = await (async function decodeTableOfContentsRec(obj) {
     if (obj.type === 'object') {
-      if (obj.depth === 0 && obj.children.length === 0) {
-        return '';
+      if (obj.depth === 0) {
+        if (obj.children.length === 0) {
+          return '';
+        } else {
+          return `<div class="toc-list">${(await Promise.all(obj.children.map(async (child) => await decodeTableOfContentsRec(child)))).join('')}</div>`;
+        }
       } else {
-        return `<ul class="toc-list-${obj.depth}">${(await Promise.all(obj.children.map(async (child) => await decodeTableOfContentsRec(child)))).join('')}</ul>`;
+        return (await Promise.all(obj.children.map(async (child) => await decodeTableOfContentsRec(child)))).join('');
       }
     } else if(obj.type === 'text') {
-      return `<a href="#${obj.href}"><li class="toc-item-${obj.level}">${obj.text}</li></a>`;
+      return `<a href="#${obj.href}"><div class="toc-item toc-item-${obj.level}">${obj.text}</div></a>`;
     } else {
       return '';
     }

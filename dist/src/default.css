@@ -58,12 +58,12 @@ footer div {
   margin: 10px;
 }
 
-h1 {
+#content h1 {
   width: 100%;
   border-bottom: 2px var(--text-color) solid;
 }
 
-h2 {
+#content h2 {
   width: 100%;
   border-bottom: 2px #ccc solid;
 }
@@ -100,8 +100,7 @@ pre {
 
 #metadata {
   padding: 20px;
-  border: 2px solid var(--hyperlink-color);
-  border-radius: 10px;
+  border-bottom: 2px solid var(--text-color);
 }
 
 #table-of-contents {
@@ -109,7 +108,7 @@ pre {
   padding: 50px;
 }
 
-#table-of-contents:has(ul) {
+#table-of-contents:has(div.toc-list) {
   display: block;
 }
 
@@ -119,17 +118,32 @@ pre {
   margin-bottom: 20px;
 }
 
-#table-of-contents ul {
+#table-of-contents div.toc-item {
+  padding: 4px;
+}
+
+#table-of-contents div.toc-item:hover {
+  background-color: var(--hover-background-color);
+}
+
+#table-of-contents div.toc-item-2 {
   padding-left: 20px;
 }
 
-#table-of-contents li {
-  padding: 4px;
-  border-bottom: var(--text-color) solid 1px;
+#table-of-contents div.toc-item-3 {
+  padding-left: 40px;
 }
 
-#table-of-contents li:hover {
-  background-color: var(--hover-background-color);
+#table-of-contents div.toc-item-4 {
+  padding-left: 60px;
+}
+
+#table-of-contents div.toc-item-5 {
+  padding-left: 80px;
+}
+
+#table-of-contents div.toc-item-6 {
+  padding-left: 100px;
 }
 
 .katex-display {
